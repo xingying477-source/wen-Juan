@@ -15,7 +15,7 @@ app.use(express.static(__dirname));
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // 数据文件路径（优先使用 Railway Volume 挂载点）
-const DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || (fs.existsSync('/data') ? '/data' : __dirname);
 const DATA_FILE = path.join(DATA_DIR, 'data.json');
 if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
 
