@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蜡烛面包 · 后台</title>
+<style>
+:root{--bg:#f4f1ec;--card:#fdfcf9;--text:#1e1e1e;--accent:#6b4e3d;--border:#e3ded6;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:"PingFang SC","Microsoft YaHei",sans-serif;padding:32px 16px;color:var(--text);}
+.container{max-width:960px;margin:0 auto;}
+h1{font-family:"Noto Serif SC","Songti SC",serif;font-size:22px;color:var(--accent);margin-bottom:4px;}
+.sub{font-size:13px;color:#9e9a93;margin-bottom:20px;}
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:12px;margin-right:8px;margin-bottom:8px;}
+.btn:hover{opacity:.85;}
+.card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:16px;border:1px solid var(--border);}
+.card .time{font-size:11px;color:#b8b0a6;margin-bottom:6px;}
+.card .item{margin-bottom:4px;font-size:13px;line-height:1.6;}
+.card .item strong{color:var(--accent);font-weight:600;}
+.card .images{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.card .images img{width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:.2s;}
+.card .images img:hover{transform:scale(1.05);}
+.empty{text-align:center;padding:60px;color:#b8b0a6;font-size:14px;}
+.login-box{text-align:center;padding:80px 20px;}
+.login-box input{padding:10px 16px;border:1px solid var(--border);border-radius:8px;font-size:14px;width:240px;margin-top:16px;outline:none;}
+.login-box input:focus{border-color:var(--accent);}
+.login-box .btn{margin-top:16px;padding:10px 32px;font-size:14px;}
+/* lightbox */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;justify-content:center;align-items:center;cursor:pointer;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:90%;max-height:90%;border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="login-box" id="loginBox">
+        <h1>🥖🕯️ 问卷后台</h1>
+        <p style="color:#9e9a93;margin-top:8px;">请输入管理密码</p>
+        <input type="password" id="pwdInput" placeholder="密码" onkeydown="if(event.key==='Enter')doLogin()">
+        <br><button class="btn" onclick="doLogin()">进入后台</button>
+    </div>
+</div>
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')">
+    <img id="lightboxImg" src="">
+</div>
+<script>
+let token = '';
+
+function doLogin() {
+    token = document.getElementById('pwdInput').value;
+    load();
+}
+
+async function load() {
+    try {
+        const r = await fetch('/api/responses', { headers: { Authorization: 'Bearer ' + token } });
+        if (r.status === 401) { alert('密码错误'); return; }
+        const d = await r.json();
+        renderAdmin(d);
+    } catch (e) { alert('请求失败'); }
+}
+
+function renderAdmin(d) {
+    document.getElementById('app').innerHTML =
+        '<h1>🥖🕯️ 问卷后台</h1>' +
+        '<p class="sub">蜡烛面包 · 拍前小聊天 · <span id="count">' + d.length + '</span> 份回复</p>' +
+        '<div style="margin-bottom:16px;">' +
+        '<button class="btn" onclick="load()">刷新</button>' +
+        '<button class="btn" onclick="exportCSV()">导出 CSV</button>' +
+        '</div>' +
+        '<div id="list"></div>';
+
+    if (d.length === 0) {
+        document.getElementById('list').innerHTML = '<div class="empty">还没有回复，把问卷链接发给客户吧 🕯️</div>';
+        return;
+    }
+    let h = '';
+    d.slice().reverse().forEach(a => {
+        h += '<div class="card"><div class="time">' + a.time + '</div>';
+        if (a.q1) h += '<div class="item"><strong>称呼：</strong>' + esc(a.q1) + '</div>';
+        if (a.q2_freq || a.q2_exp) h += '<div class="item"><strong>镜头熟度：</strong>' + esc([a.q2_freq, a.q2_exp].filter(Boolean).join(' / ')) + '</div>';
+        if (a.q3_phone || a.q3_face) h += '<div class="item"><strong>拍摄习惯：</strong>' + esc([a.q3_phone, a.q3_face].filter(Boolean).join(' / ')) + '</div>';
+        if (a.q4 && a.q4.length) h += '<div class="item"><strong>为什么拍：</strong>' + esc(a.q4.join('、')) + (a.q4_other ? '，' + esc(a.q4_other) : '') + '</div>';
+        if (a.q5_advantage && a.q5_advantage.length) h += '<div class="item"><strong>优势：</strong>' + esc(a.q5_advantage.join('、')) + (a.q5_advantage_other ? '，' + esc(a.q5_advantage_other) : '') + '</div>';
+        if (a.q5_weakness && a.q5_weakness.length) h += '<div class="item"><strong>弱化：</strong>' + esc(a.q5_weakness.join('、')) + (a.q5_weakness_other ? '，' + esc(a.q5_weakness_other) : '') + '</div>';
+        if (a.q6 && a.q6.length) h += '<div class="item"><strong>风格：</strong>' + esc(a.q6.join('、')) + (a.q6_other ? '，' + esc(a.q6_other) : '') + '</div>';
+        if (a.q7 && a.q7.length) h += '<div class="item"><strong>隐藏款：</strong>' + esc(a.q7.join('、')) + (a.q7_other ? '，' + esc(a.q7_other) : '') + '</div>';
+        if (a.q8 && a.q8.length) h += '<div class="item"><strong>配合方式：</strong>' + esc(a.q8.join('、')) + (a.q8_other ? '，' + esc(a.q8_other) : '') + '</div>';
+        if (a.q9) h += '<div class="item"><strong>穿搭：</strong>' + esc(a.q9) + '</div>';
+        if (a.q10_images && a.q10_images.length) {
+            h += '<div class="item"><strong>案例图：</strong></div><div class="images">';
+            a.q10_images.forEach(url => { h += '<img src="' + url + '" onclick="showLightbox(\'' + url + '\')">'; });
+            h += '</div>';
+        }
+        if (a.q10_desc) h += '<div class="item"><strong>案例描述：</strong>' + esc(a.q10_desc) + '</div>';
+        if (a.last) h += '<div class="item"><strong>补充：</strong>' + esc(a.last) + '</div>';
+        h += '</div>';
+    });
+    document.getElementById('list').innerHTML = h;
+}
+
+function showLightbox(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightbox').classList.add('show');
+}
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+async function exportCSV() {
+    const r = await fetch('/api/responses', { headers: { Authorization: 'Bearer ' + token } });
+    const d = await r.json();
+    if (!d.length) { alert('没有数据'); return; }
+    let csv = '﻿时间,称呼,为什么拍,风格,优势,弱化,配合方式,穿搭,补充\n';
+    d.forEach(a => {
+        csv += [a.time, a.q1 || '', (a.q4 || []).join('/'), (a.q6 || []).join('/'), (a.q5_advantage || []).join('/'), (a.q5_weakness || []).join('/'), (a.q8 || []).join('/'), a.q9 || '', a.last || ''].map(v => '"' + v.replace(/"/g, '""') + '"').join(',') + '\n';
+    });
+    const b = new Blob([csv], { type: 'text/csv' });
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href = u;
+    a.download = '问卷回复.csv';
+    a.click();
+}
+</script>
+</body>
+</html>

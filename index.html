@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拍前小聊天 — 蜡烛面包</title>
+    <style>
+        :root {
+            --bg: #f4f1ec;
+            --card: #fdfcf9;
+            --text: #1e1e1e;
+            --text-mid: #5c5c5c;
+            --text-light: #9e9a93;
+            --accent: #6b4e3d;
+            --accent-soft: #d9cbb8;
+            --accent-pale: #f7f1ea;
+            --border: #e3ded6;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.04);
+            --font-serif: "Noto Serif SC", "Songti SC", "STSong", "Georgia", "Times New Roman", serif;
+            --font-sans: "Inter", "PingFang SC", "SF Pro Display", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+            --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: var(--font-sans);
+            color: var(--text);
+            line-height: 1.65;
+            display: flex;
+            justify-content: center;
+            padding: 40px 16px 72px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-image:
+                radial-gradient(ellipse at 50% 0%, rgba(107, 78, 61, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(107, 78, 61, 0.03) 0%, transparent 50%);
+        }
+
+        .questionnaire {
+            max-width: 640px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ========== 头部 ========== */
+        .header-card {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            padding: 36px 28px 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8b6f5e, #6b4e3d, #5a3e2e, #6b4e3d, #8b6f5e);
+            border-radius: 3px 3px 0 0;
+        }
+        .header-card h1 {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+        .header-card .divider-line {
+            width: 40px;
+            height: 1px;
+            background: var(--accent-soft);
+            margin: 10px auto 8px;
+        }
+        .header-card .tagline {
+            font-family: var(--font-serif);
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        .header-card .subtitle {
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 400;
+            letter-spacing: 0.04em;
+        }
+
+        /* ========== 卡片 ========== */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            padding: 26px 28px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            position: relative;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: #d9d2c9;
+        }
+
+        /* 题号 + 标题同行 */
+        .q-head {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .q-num {
+            font-family: var(--font-serif);
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .q-title {
+            font-family: var(--font-serif);
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+        }
+        .q-hint {
+            font-size: 11px;
+            color: #8b7b6e;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            margin-left: 2px;
+        }
+
+        /* 子标题 */
+        .q-subtitle {
+            font-size: 14px;
+            color: var(--text-mid);
+            margin-bottom: 8px;
+            font-weight: 400;
+            letter-spacing: 0.03em;
+        }
+
+        /* 输入框 */
+        .input-field {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            border-radius: 0;
+            padding: 10px 0;
+            font-size: 14px;
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: transparent;
+            transition: var(--transition);
+            outline: none;
+            letter-spacing: 0.02em;
+            font-weight: 400;
+        }
+        .input-field:focus {
+            border-bottom-color: var(--accent);
+        }
+        .input-field::placeholder {
+            color: #cbc6be;
+            font-size: 13px;
+            letter-spacing: 0.03em;
+            font-weight: 400;
+        }
+        .input-field.inline {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        /* 选项组 */
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 7px 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+            margin: 0 -10px;
+        }
+        .option-row:hover {
+            background: rgba(107, 78, 61, 0.03);
+        }
+
+        /* 自定义 radio / checkbox */
+        input[type="radio"],
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            border: 1.5px solid #d4cec5;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            background: #fff;
+            position: relative;
+            flex-shrink: 0;
+        }
+        input[type="checkbox"] {
+            border-radius: 4px;
+        }
+        input[type="radio"]:checked,
+        input[type="checkbox"]:checked {
+            border-color: var(--accent);
+            background: var(--accent);
+        }
+        input[type="radio"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+        }
+        input[type="checkbox"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 4px;
+            height: 8px;
+            border: solid #fff;
+            border-width: 0 1.5px 1.5px 0;
+        }
+        .option-label {
+            font-size: 14px;
+            color: var(--text);
+            cursor: pointer;
+            user-select: none;
+            letter-spacing: 0.02em;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* 子分组 */
+        .sub-section {
+            margin-top: 14px;
+            padding: 14px 14px 10px;
+            background: rgba(247, 241, 234, 0.3);
+            border-radius: var(--radius-md);
+            border: 1px dashed #e8e0d6;
+        }
+        .sub-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #7a6655;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .sub-label .sub-emoji {
+            font-size: 14px;
+        }
+
+        /* 上传区域 */
+        .upload-area {
+            border: 2px dashed #e3ddd4;
+            border-radius: var(--radius-md);
+            padding: 24px 20px;
+            text-align: center;
+            color: #b8b0a6;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(253, 252, 249, 0.6);
+            letter-spacing: 0.03em;
+            font-weight: 400;
+        }
+        .upload-area:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-pale);
+        }
+        .upload-icon {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 6px;
+            opacity: 0.8;
+        }
+        .upload-note {
+            font-size: 12px;
+            color: #c4beb4;
+            margin-top: 10px;
+            letter-spacing: 0.03em;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* 文本域 */
+        .textarea-field {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            border-radius: 0;
+            padding: 10px 0;
+            font-size: 14px;
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: transparent;
+            resize: vertical;
+            min-height: 70px;
+            transition: var(--transition);
+            outline: none;
+            letter-spacing: 0.02em;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+        .textarea-field:focus {
+            border-bottom-color: var(--accent);
+        }
+        .textarea-field::placeholder {
+            color: #cbc6be;
+            font-size: 13px;
+            letter-spacing: 0.03em;
+            font-weight: 400;
+        }
+
+        /* 分隔线 */
+        .soft-divider {
+            border: none;
+            border-top: 1px solid #ece7de;
+            margin: 10px 0 12px;
+        }
+
+        /* 提交按钮 */
+        .submit-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 8px 0 0;
+        }
+        .btn-submit {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 14px 48px;
+            font-size: 15px;
+            font-family: var(--font-serif);
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(107, 78, 61, 0.2);
+        }
+        .btn-submit:hover {
+            background: #5a3e2e;
+            box-shadow: 0 4px 16px rgba(107, 78, 61, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-submit:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(107, 78, 61, 0.2);
+        }
+
+        /* 底部 */
+        .footer-note {
+            text-align: center;
+            font-size: 13px;
+            color: #c4beb4;
+            letter-spacing: 0.05em;
+            padding: 4px 0 0;
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* 响应式 */
+        @media (max-width: 500px) {
+            .card {
+                padding: 20px 16px;
+            }
+            .header-card {
+                padding: 28px 16px 22px;
+            }
+            .header-card h1 {
+                font-size: 23px;
+            }
+            .q-num,
+            .q-title {
+                font-size: 15px;
+            }
+            .q-subtitle {
+                font-size: 13px;
+            }
+            .option-label {
+                font-size: 13px;
+            }
+            .sub-section {
+                padding: 10px 10px 6px;
+            }
+            .btn-submit {
+                padding: 12px 36px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="questionnaire">
+
+        <!-- ===== 头部 ===== -->
+        <div class="header-card">
+            <h1>📸 拍前小聊天</h1>
+            <div class="divider-line"></div>
+            <p class="tagline">蜡烛面包</p>
+            <p class="subtitle">想到什么填什么～</p>
+        </div>
+
+        <!-- ===== Q1 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">01.</span>
+                <span class="q-title">✨ 怎么称呼你？</span>
+            </div>
+            <input class="input-field" type="text" placeholder="你的昵称或名字">
+        </div>
+
+        <!-- ===== Q2 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">02.</span>
+                <span class="q-title">📷 你和镜头的熟度？</span>
+            </div>
+            <p class="q-subtitle">平时拍照频率</p>
+            <div class="options-group">
+                <label class="option-row"><input type="radio" name="freq"><span class="option-label">A. 超高</span></label>
+                <label class="option-row"><input type="radio" name="freq"><span class="option-label">B. 还行</span></label>
+                <label class="option-row"><input type="radio" name="freq"><span class="option-label">C. 比较少</span></label>
+                <label class="option-row"><input type="radio" name="freq"><span class="option-label">D. 几乎不拍</span></label>
+            </div>
+            <div class="soft-divider"></div>
+            <p class="q-subtitle">约拍经验</p>
+            <div class="options-group">
+                <label class="option-row"><input type="radio" name="exp"><span class="option-label">A. 第一次，可能需要你多引导</span></label>
+                <label class="option-row"><input type="radio" name="exp"><span class="option-label">B. 拍过几次，还是想要一些指导</span></label>
+                <label class="option-row"><input type="radio" name="exp"><span class="option-label">C. 拍了很多，有自己的想法</span></label>
+            </div>
+        </div>
+
+        <!-- ===== Q3 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">03.</span>
+                <span class="q-title">👤 关于你的拍摄习惯？</span>
+            </div>
+            <p class="q-subtitle">手机里的你大多是</p>
+            <div class="options-group">
+                <label class="option-row"><input type="radio" name="phone"><span class="option-label">A. 自拍</span></label>
+                <label class="option-row"><input type="radio" name="phone"><span class="option-label">B. 他拍</span></label>
+                <label class="option-row"><input type="radio" name="phone"><span class="option-label">C. 约拍/写真</span></label>
+                <label class="option-row"><input type="radio" name="phone"><span class="option-label">D. 不太拍自己</span></label>
+            </div>
+            <div class="soft-divider"></div>
+            <p class="q-subtitle">平时更偏爱哪边脸</p>
+            <div class="options-group">
+                <label class="option-row"><input type="radio" name="face"><span class="option-label">A. 左脸</span></label>
+                <label class="option-row"><input type="radio" name="face"><span class="option-label">B. 右脸</span></label>
+                <label class="option-row"><input type="radio" name="face"><span class="option-label">C. 两边都行</span></label>
+            </div>
+        </div>
+
+        <!-- ===== Q4 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">04.</span>
+                <span class="q-title">💭 为什么想拍照？</span>
+                <span class="q-hint">多选</span>
+            </div>
+            <div class="options-group">
+                <label class="option-row"><input type="checkbox"><span class="option-label">就是想要一套美美的照片，记录现在的自己</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">想拍出自己的另一面</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">人生新节点，拍照做纪念（生日、离职、新开始……）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">没什么特别的，想送自己一份礼物</span></label>
+            </div>
+            <input class="input-field inline" type="text" placeholder="其他">
+        </div>
+
+        <!-- ===== Q5 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">05.</span>
+                <span class="q-title">🔍 你觉得自己的优势在哪？想弱化的地方呢？</span>
+                <span class="q-hint">多选</span>
+            </div>
+
+            <div class="sub-section">
+                <p class="sub-label"><span class="sub-emoji">✨</span> 优势</p>
+                <div class="options-group">
+                    <label class="option-row"><input type="checkbox"><span class="option-label">眼睛/眼神</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">嘴巴/唇形</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">侧脸/下颌线</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">锁骨/脖颈</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">手/手指</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">腿</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">笑起来最有感染力</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">不太确定，交给你帮我看看</span></label>
+                </div>
+                <input class="input-field inline" type="text" placeholder="其他">
+            </div>
+
+            <div class="sub-section" style="margin-top:12px;">
+                <p class="sub-label"><span class="sub-emoji">🌿</span> 想弱化</p>
+                <div class="options-group">
+                    <label class="option-row"><input type="checkbox"><span class="option-label">手臂</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">脸型轮廓</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">身高比例</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">表情管理（容易僵/笑崩）</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">腿部线条</span></label>
+                    <label class="option-row"><input type="checkbox"><span class="option-label">暂时没想到，都挺自信的</span></label>
+                </div>
+                <input class="input-field inline" type="text" placeholder="其他">
+            </div>
+        </div>
+
+        <!-- ===== Q6 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">06.</span>
+                <span class="q-title">🎞️ 哪种风格让你心动？</span>
+                <span class="q-hint">多选 · 最多3个</span>
+            </div>
+            <div class="options-group">
+                <label class="option-row"><input type="checkbox"><span class="option-label">自然松弛（阳光、大笑、生活感抓拍）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">清冷氛围（情绪向、不笑、像电影截图）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">私房写真（记录自己）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">法式慵懒（碎花、发丝光、随意漫步）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">职场高智感（清冷干练、有故事）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">复古年代感（七八十年代）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">没有想法，顺其自然拍就好了 / 推荐</span></label>
+            </div>
+            <input class="input-field inline" type="text" placeholder="其他">
+        </div>
+
+        <!-- ===== Q7 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">07.</span>
+                <span class="q-title">🗝️ 有没有想解锁的隐藏款自己？</span>
+                <span class="q-hint">多选</span>
+            </div>
+            <div class="options-group">
+                <label class="option-row"><input type="checkbox"><span class="option-label">眼神放空、微醺感、清冷感</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">奔跑、大笑、甚至哭出来的释放感</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">尝试大胆穿搭</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">带情绪的场景（雨天、深夜、老楼）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">演个角色（作家、艺术家、电影女主角……）</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">暂时不想整活，自然舒服就好</span></label>
+            </div>
+            <input class="input-field inline" type="text" placeholder="其他">
+        </div>
+
+        <!-- ===== Q8 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">08.</span>
+                <span class="q-title">🤝 拍摄时希望我怎么配合你？</span>
+                <span class="q-hint">多选</span>
+            </div>
+            <div class="options-group">
+                <label class="option-row"><input type="checkbox"><span class="option-label">明确告诉我怎么摆，我听指挥</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">多角度抓拍，你自由发挥</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">给个情境我们边聊边拍</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">疯狂夸我，我需要情绪价值</span></label>
+                <label class="option-row"><input type="checkbox"><span class="option-label">帮我盯细节（头发、衣服、表情）</span></label>
+            </div>
+            <input class="input-field inline" type="text" placeholder="其他">
+        </div>
+
+        <!-- ===== Q9 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">09.</span>
+                <span class="q-title">👗 关于穿搭？</span>
+            </div>
+            <div class="options-group">
+                <label class="option-row"><input type="radio" name="outfit"><span class="option-label">有想法了，到时候发你帮我参考</span></label>
+                <label class="option-row"><input type="radio" name="outfit"><span class="option-label">有好几件备选，需要你帮我筛选</span></label>
+                <label class="option-row"><input type="radio" name="outfit"><span class="option-label">完全没头绪，需要一起讨论</span></label>
+                <label class="option-row"><input type="radio" name="outfit"><span class="option-label">想多带两套，现场换</span></label>
+            </div>
+        </div>
+
+        <!-- ===== Q10 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">10.</span>
+                <span class="q-title">🖼️ 把你喜欢的案例图丢过来？</span>
+            </div>
+            <p class="q-subtitle">可以多传，越多越懂你</p>
+            <div class="upload-area">
+                <span class="upload-icon">📁</span>
+                点击或拖拽上传<br><span style="font-size:12px;color:#cbc6be;">支持 JPG / PNG / WebP</span>
+            </div>
+            <p class="upload-note">📸 也可以粘贴图片链接 / 风格参考关键词 / 或简单描述氛围</p>
+            <textarea class="textarea-field" placeholder="在这里粘贴链接或描述…" style="min-height:56px;margin-top:6px;"></textarea>
+        </div>
+
+        <!-- ===== 最后 ===== -->
+        <div class="card">
+            <div class="q-head">
+                <span class="q-num">💬</span>
+                <span class="q-title">最后，有什么想补充的？</span>
+            </div>
+            <p class="q-subtitle">拍摄顾虑、想尝试的创意、想让我避开的，都可以写</p>
+            <textarea class="textarea-field" placeholder="在这里畅所欲言…"></textarea>
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="submit-wrapper">
+            <button class="btn-submit" onclick="submitForm()">✨ 提交问卷 ✨</button>
+        </div>
+
+        <!-- 底部 -->
+        <p class="footer-note">填完啦，期待见面 一起创作 🌟</p>
+
+    </div>
+
+    <script>
+    const uploadedImages = [];
+
+    // 图片上传区域
+    document.querySelector('.upload-area').addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.accept = 'image/jpeg,image/png,image/webp';
+        input.onchange = async (e) => {
+            for (const file of e.target.files) {
+                const base64 = await fileToBase64(file);
+                try {
+                    const res = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: file.name, data: base64 })
+                    });
+                    const json = await res.json();
+                    if (json.success) uploadedImages.push(json.url);
+                } catch (err) { console.error('上传失败', err); }
+            }
+            updateUploadPreview();
+        };
+        input.click();
+    });
+
+    // 拖拽上传
+    const uploadArea = document.querySelector('.upload-area');
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent)'; });
+    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '';
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.accept = 'image/jpeg,image/png,image/webp';
+        // 手动触发 files 处理
+        const dt = new DataTransfer();
+        for (const f of e.dataTransfer.files) dt.items.add(f);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change'));
+    });
+
+    function fileToBase64(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function updateUploadPreview() {
+        let preview = document.querySelector('.upload-preview');
+        if (!preview) {
+            preview = document.createElement('div');
+            preview.className = 'upload-preview';
+            preview.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;';
+            document.querySelector('.upload-area').after(preview);
+        }
+        preview.innerHTML = uploadedImages.map(url =>
+            '<img src="' + url + '" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">'
+        ).join('');
+        if (uploadedImages.length) {
+            preview.innerHTML += '<div style="font-size:12px;color:var(--text-light);align-self:center;">已上传 ' + uploadedImages.length + ' 张</div>';
+        }
+    }
+
+    // Q6 最多选 3 个
+    document.querySelectorAll('.card')[5]?.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const checked = this.closest('.options-group').querySelectorAll('input[type="checkbox"]:checked');
+            if (checked.length > 3) { this.checked = false; }
+        });
+    });
+
+    function submitForm() {
+        const data = {};
+        const cards = document.querySelectorAll('.card');
+
+        data.q1 = cards[0]?.querySelector('.input-field')?.value || '';
+
+        data.q2_freq = cards[1]?.querySelector('input[name="freq"]:checked')?.closest('.option-row')?.querySelector('.option-label')?.textContent?.trim() || '';
+        data.q2_exp = cards[1]?.querySelector('input[name="exp"]:checked')?.closest('.option-row')?.querySelector('.option-label')?.textContent?.trim() || '';
+
+        data.q3_phone = cards[2]?.querySelector('input[name="phone"]:checked')?.closest('.option-row')?.querySelector('.option-label')?.textContent?.trim() || '';
+        data.q3_face = cards[2]?.querySelector('input[name="face"]:checked')?.closest('.option-row')?.querySelector('.option-label')?.textContent?.trim() || '';
+
+        data.q4 = getChecked(cards[3]);
+        data.q4_other = cards[3]?.querySelector('.input-field')?.value || '';
+
+        const q5subs = cards[4]?.querySelectorAll('.sub-section');
+        data.q5_advantage = getChecked(q5subs?.[0]);
+        data.q5_advantage_other = q5subs?.[0]?.querySelector('.input-field')?.value || '';
+        data.q5_weakness = getChecked(q5subs?.[1]);
+        data.q5_weakness_other = q5subs?.[1]?.querySelector('.input-field')?.value || '';
+
+        data.q6 = getChecked(cards[5]);
+        data.q6_other = cards[5]?.querySelector('.input-field')?.value || '';
+
+        data.q7 = getChecked(cards[6]);
+        data.q7_other = cards[6]?.querySelector('.input-field')?.value || '';
+
+        data.q8 = getChecked(cards[7]);
+        data.q8_other = cards[7]?.querySelector('.input-field')?.value || '';
+
+        data.q9 = cards[8]?.querySelector('input[name="outfit"]:checked')?.closest('.option-row')?.querySelector('.option-label')?.textContent?.trim() || '';
+
+        data.q10_images = uploadedImages;
+        data.q10_desc = cards[9]?.querySelector('.textarea-field')?.value || '';
+
+        data.last = cards[10]?.querySelector('.textarea-field')?.value || '';
+
+        fetch('/api/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                document.querySelector('.questionnaire').innerHTML =
+                    '<div class="header-card" style="text-align:center;padding:60px 28px;">' +
+                    '<h1 style="font-size:24px;">提交成功！</h1>' +
+                    '<p style="margin-top:12px;color:var(--text-light);">期待见面，一起创作 🌟</p>' +
+                    '</div>';
+            } else {
+                alert('提交失败，请重试');
+            }
+        })
+        .catch(() => alert('网络错误，请稍后重试'));
+    }
+
+    function getChecked(el) {
+        if (!el) return [];
+        const checks = el.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checks).map(c => c.closest('.option-row')?.querySelector('.option-label')?.textContent?.trim() || '');
+    }
+    </script>
+
+</body>
+</html>
