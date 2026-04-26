@@ -626,10 +626,11 @@
                 <span class="q-title">🖼️ 把你喜欢的案例图丢过来？</span>
             </div>
             <p class="q-subtitle">可以多传，越多越懂你</p>
-            <div class="upload-area">
+            <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp" style="display:none">
+            <label for="fileInput" class="upload-area" style="display:block;cursor:pointer;">
                 <span class="upload-icon">📁</span>
                 点击或拖拽上传<br><span style="font-size:12px;color:#cbc6be;">支持 JPG / PNG / WebP</span>
-            </div>
+            </label>
             <p class="upload-note">📸 也可以粘贴图片链接 / 风格参考关键词 / 或简单描述氛围</p>
             <textarea class="textarea-field" placeholder="在这里粘贴链接或描述…" style="min-height:56px;margin-top:6px;"></textarea>
         </div>
@@ -657,47 +658,38 @@
     <script>
     const uploadedImages = [];
 
-    // 图片上传区域
-    document.querySelector('.upload-area').addEventListener('click', function() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.multiple = true;
-        input.accept = 'image/jpeg,image/png,image/webp';
-        input.onchange = async (e) => {
-            for (const file of e.target.files) {
-                const base64 = await fileToBase64(file);
-                try {
-                    const res = await fetch('/api/upload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ filename: file.name, data: base64 })
-                    });
-                    const json = await res.json();
-                    if (json.success) uploadedImages.push(json.url);
-                } catch (err) { console.error('上传失败', err); }
-            }
-            updateUploadPreview();
-        };
-        input.click();
+    // 点击上传 — 用隐藏 input + label，兼容所有浏览器
+    document.getElementById('fileInput').addEventListener('change', async function(e) {
+        await handleFiles(this.files);
+        this.value = '';
     });
 
     // 拖拽上传
     const uploadArea = document.querySelector('.upload-area');
-    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent)'; });
-    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
-    uploadArea.addEventListener('drop', (e) => {
+    uploadArea.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+    uploadArea.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+    uploadArea.addEventListener('drop', function(e) {
         e.preventDefault();
-        uploadArea.style.borderColor = '';
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.multiple = true;
-        input.accept = 'image/jpeg,image/png,image/webp';
-        // 手动触发 files 处理
-        const dt = new DataTransfer();
-        for (const f of e.dataTransfer.files) dt.items.add(f);
-        input.files = dt.files;
-        input.dispatchEvent(new Event('change'));
+        this.style.borderColor = '';
+        handleFiles(e.dataTransfer.files);
     });
+
+    async function handleFiles(files) {
+        for (const file of files) {
+            if (!file.type.match(/^image\/(jpeg|png|webp)$/)) continue;
+            const base64 = await fileToBase64(file);
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: file.name, data: base64 })
+                });
+                const json = await res.json();
+                if (json.success) uploadedImages.push(json.url);
+            } catch (err) { console.error('上传失败', err); }
+        }
+        updateUploadPreview();
+    }
 
     function fileToBase64(file) {
         return new Promise((resolve) => {
